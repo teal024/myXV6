@@ -56,12 +56,14 @@ filedup(struct file *f)
 }
 
 // Close file f.  (Decrement ref count, close when reaches 0.)
+// 首先获取全局文件表的锁（ftable.lock），然后检查文件的引用计数（ref）。如果引用计数小于 1，则发生错误（panic）。
+// 接着，如果引用计数减一后仍大于 0，则释放文件表的锁并返回，表示文件仍有其他地方在使用，不需要关闭。
 void
 fileclose(struct file *f)
 {
   struct file ff;
 
-  acquire(&ftable.lock);
+  acquire(&ftable.lock);  // 这里的filelock是一个全局的锁，这样每个进程只能访问一个文件，每个线程都有自己的一个lock
   if(f->ref < 1)
     panic("fileclose");
   if(--f->ref > 0){

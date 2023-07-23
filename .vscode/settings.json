@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "sleeplock.h": "c",
+        "__config": "c",
+        "locale": "c"
+    },
+    "C_Cpp.errorSquiggles": "enabled"
+}
