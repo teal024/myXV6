@@ -6,6 +6,8 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "sysinfo.h"
+
 
 uint64
 sys_exit(void)
@@ -94,4 +96,35 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+uint64
+sys_trace(void)
+{
+  int n;
+  // 获取追踪的mask, 从陷阱帧中获取用户程序传递的第一个参数
+  // 这些这些参数是由用户程序通过寄存器传递给内核的, 0表示从a0寄存器中读取
+  if(argint(0, &n) < 0)
+    return -1;
+  // 将mask保存在本进程的proc中
+  myproc()->TraceMask = n;
+  return 0;
+}
+
+uint64
+sys_sysinfo(void)
+{
+  struct sysinfo info;
+  info.freemem = get_free_physical_memory();
+  info.nproc = get_proc_num();
+  
+  uint64 infoAddr;   // 获取用户空间参数，即要获取的info的地址
+  if(argaddr(0, &infoAddr) < 0)
+    return -1;
+
+  struct proc *p = myproc();    // 获取用户空间中正在执行代码的进程，即要获取sysinfo的进程
+  if (copyout(p->pagetable, infoAddr, (char *)&info, sizeof(info)) < 0)    // 拷贝到该进程页表中对应地址处
+    return -1;
+
+  return 0;
 }

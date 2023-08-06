@@ -32,7 +32,7 @@ fetchstr(uint64 addr, char *buf, int max)
 }
 
 static uint64
-argraw(int n)
+argraw(int n)   // 看当前进程对应的cpu寄存器中的内容
 {
   struct proc *p = myproc();
   switch (n) {
@@ -104,8 +104,11 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_wait(void);
 extern uint64 sys_write(void);
 extern uint64 sys_uptime(void);
+extern uint64 sys_trace(void);
+extern uint64 sys_sysinfo(void);
 
-static uint64 (*syscalls[])(void) = {
+
+static uint64 (*syscalls[])(void) = {   // 每个元素都是一个函数指针,(*syscalls[])表示数组中的元素是指针
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
 [SYS_wait]    sys_wait,
@@ -127,17 +130,29 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_trace]   sys_trace,
+[SYS_sysinfo] sys_sysinfo,
 };
 
+static char *SyscallName[] = {
+        "", "fork", "exit", "wait", "pipe", "read", "kill", "exec", "fstat", "chdir", "dup",
+        "getpid", "sbrk", "sleep", "uptime", "open", "write", "mknod", "unlink", "link", "mkdir",
+        "close", "trace"
+};    // 这个和syscalls的数组是对应的，用于检索
+
 void
-syscall(void)
+syscall(void)   // 系统调用实现函数
 {
   int num;
   struct proc *p = myproc();
-
-  num = p->trapframe->a7;
-  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    p->trapframe->a0 = syscalls[num]();
+  // p用来保存当前运行进程的信息
+  num = p->trapframe->a7;   // 从进程的陷阱帧(保存的上下文)中获取系统调用号
+  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {   // 范围判断加上对应的存在
+    p->trapframe->a0 = syscalls[num]();     // 调用对应函数并存在a0寄存器（用于存返回值）中
+    if(p->TraceMask & (1 << num)){               // 按位与，判断TraceMask对应的值有没有在num位置上设置标志位
+    // 000...1左移num位，刚好是得到num位的                                        
+      printf("%d: syscall %s -> %d\n", p->pid, SyscallName[num], p->trapframe->a0);    
+    }
   } else {
     printf("%d %s: unknown sys call %d\n",
             p->pid, p->name, num);

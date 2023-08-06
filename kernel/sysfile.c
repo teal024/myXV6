@@ -19,19 +19,19 @@
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
 static int
-argfd(int n, int *pfd, struct file **pf)
+argfd(int n, int *pfd, struct file **pf)    // 获取文件描述符的指针
 {
   int fd;
   struct file *f;
 
-  if(argint(n, &fd) < 0)
+  if(argint(n, &fd) < 0)  // 从当前进程的用户空间中取第n个参数转化为整数
     return -1;
   if(fd < 0 || fd >= NOFILE || (f=myproc()->ofile[fd]) == 0)
     return -1;
   if(pfd)
-    *pfd = fd;
+    *pfd = fd;  // 赋值为对应的文件描述符指针
   if(pf)
-    *pf = f;
+    *pf = f;    // 赋值为对应的文件结构体指针
   return 0;
 }
 
@@ -105,14 +105,15 @@ sys_close(void)
 }
 
 uint64
-sys_fstat(void)
+sys_fstat(void)   // 将内核状态的文件信息复制到用户文件中
 {
   struct file *f;
   uint64 st; // user pointer to struct stat
+  // 将获取的文件指针存储到变量f中，将获取的用户空间地址指针存到st中
 
-  if(argfd(0, 0, &f) < 0 || argaddr(1, &st) < 0)
+  if(argfd(0, 0, &f) < 0 || argaddr(1, &st) < 0)    // 获取正在处理的文件描述符和用户空间中stat的地址
     return -1;
-  return filestat(f, st);
+  return filestat(f, st);   // filestat将文件信息填到用户空间的对应地址中(一个指向struct stat的地址)
 }
 
 // Create the path new as a link to the same inode as old.

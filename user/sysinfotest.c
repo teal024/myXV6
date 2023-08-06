@@ -6,7 +6,7 @@
 
 void
 sinfo(struct sysinfo *info) {
-  if (sysinfo(info) < 0) {
+  if (sysinfo(info) < 0) {    // 就一个参数，info的地址
     printf("FAIL: sysinfo failed");
     exit(1);
   }

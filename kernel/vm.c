@@ -49,8 +49,8 @@ kvminit()
 
 // Switch h/w page table register to the kernel's page table,
 // and enable paging.
-void
-kvminithart()
+void    // h/w 表示 hardware and page tabel
+kvminithart()   // h/w page table register refers to a register specifying the currently active page table
 {
   w_satp(MAKE_SATP(kernel_pagetable));
   sfence_vma();
@@ -147,7 +147,7 @@ kvmpa(uint64 va)
 // allocate a needed page-table page.
 int
 mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
-{
+{   // use walk to find the PTE address
   uint64 a, last;
   pte_t *pte;
 
@@ -352,22 +352,22 @@ uvmclear(pagetable_t pagetable, uint64 va)
 // Copy len bytes from src to virtual address dstva in a given page table.
 // Return 0 on success, -1 on error.
 int
-copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
+copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)   // pagetable只是起始页面，虚拟地址可能横跨多个页面
 {
   uint64 n, va0, pa0;
 
   while(len > 0){
     va0 = PGROUNDDOWN(dstva);
-    pa0 = walkaddr(pagetable, va0);
+    pa0 = walkaddr(pagetable, va0); // 根据虚拟地址和页表查到对应的physical address pa0
     if(pa0 == 0)
       return -1;
     n = PGSIZE - (dstva - va0);
     if(n > len)
       n = len;
-    memmove((void *)(pa0 + (dstva - va0)), src, n);
+    memmove((void *)(pa0 + (dstva - va0)), src, n);   // memmove只涉及physical memory的移动
 
     len -= n;
-    src += n;
+    src += n;   // 源数据指针向后移动n个字节
     dstva = va0 + PGSIZE;
   }
   return 0;

@@ -27,14 +27,14 @@ void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
-  freerange(end, (void*)PHYSTOP);
+  freerange(end, (void*)PHYSTOP);     // 将页面全都添加到空闲列表中, PHYSTOP表示上限
 }
 
 void
 freerange(void *pa_start, void *pa_end)
 {
   char *p;
-  p = (char*)PGROUNDUP((uint64)pa_start);
+  p = (char*)PGROUNDUP((uint64)pa_start); // PGROUNDUP用来表示向上进位到某个页面
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
     kfree(p);
 }
@@ -54,7 +54,13 @@ kfree(void *pa)
   // Fill with junk to catch dangling refs.
   memset(pa, 1, PGSIZE);
 
-  r = (struct run*)pa;
+  r = (struct run*)pa;    // 将起始地址转换为指针，将一个地址转化为指向run结构体的指针
+
+  // 举个例子
+// 0x1000: [struct run {next=0x2000}]
+// 0x2000: [struct run {next=0x3000}]
+// 0x3000: [struct run {next=0x4000}]
+// 0x4000: [struct run {next=NULL}] //这是链表的最后一个元素，所以next指针为NULL
 
   acquire(&kmem.lock);
   r->next = kmem.freelist;
@@ -73,10 +79,25 @@ kalloc(void)
   acquire(&kmem.lock);
   r = kmem.freelist;
   if(r)
-    kmem.freelist = r->next;
+    kmem.freelist = r->next;    // update the freelist pointer to point to the next free memory page
   release(&kmem.lock);
-
+  // then we fill the original freelist
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
+}
+
+uint64
+get_free_physical_memory()   // 查看的是物理内存有多少页
+{
+  struct run* fl = kmem.freelist;
+  uint64 pages = 0;
+  acquire(&kmem.lock);    // 在这一个瞬间获取，其他进程不要修改
+  while(fl)
+  {
+    pages++;
+    fl = fl->next;
+  }
+  release(&kmem.lock);
+  return pages * PGSIZE;
 }

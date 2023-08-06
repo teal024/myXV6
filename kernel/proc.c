@@ -64,6 +64,7 @@ mycpu(void) {
 }
 
 // Return the current struct proc *, or zero if none.
+// 获取当前进程的结构体信息
 struct proc*
 myproc(void) {
   push_off();
@@ -150,6 +151,7 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+  p->TraceMask = 0;
 }
 
 // Create a user page table for a given process,
@@ -274,6 +276,9 @@ fork(void)
     return -1;
   }
   np->sz = p->sz;
+
+  // 将TraceMask复制到子进程中
+  np->TraceMask = p->TraceMask;
 
   np->parent = p;
 
@@ -692,4 +697,18 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+
+
+uint64
+get_proc_num()
+{
+  struct proc *p;
+  uint64 num = 0;
+  for(p = proc; p < &proc[NPROC]; p++) {    // 遍历proc数组
+    if(p->state != UNUSED) 
+      num++;
+  }
+  return num;
 }
