@@ -4,26 +4,23 @@
 
 void exec_pipe(int* fd)
 {
-    int num;
-    read(fd[0], &num, 4);  // 把fd中的第一个内容读出到num中
+    int num;    // 储存fd中第一个值以进行打印
+    read(fd[0], &num, 4);
     printf("prime %d\n", num);
 
     int p[2];
     pipe(p);
     int tmp = -1;
     while (1) {
-        int n = read(fd[0], &tmp, 4);      // 把fd中剩下的值读给tmp
+        int n = read(fd[0], &tmp, 4);   // 读取输入的所有值
         if (n <= 0) {
             break;
         }
-        if (tmp % num != 0) {
-            // 不断读缓冲区，只要有，就读出来测试
-            // 第一轮num是从2开始读，tmp是从3开始读，tmp读的过程中只留下不是2的倍数的
-            // 等到第二轮开始，就是从3开始读，
+        if (tmp % num != 0) {       // 写入管道
             write(p[1], &tmp, 4);
         }
     }
-    if (tmp == -1) {
+    if (tmp == -1) {    // 管道中缓冲区空，筛选完
         close(p[1]);
         close(p[0]);
         close(fd[0]);
@@ -36,12 +33,11 @@ void exec_pipe(int* fd)
         exec_pipe(p);
         close(p[0]);
     }
-    else {
-        close(p[1]);
-        close(p[0]);
+    else {      // 父进程，执行完直接阻塞，等待子进程结束
+        close(p[1]);    // 关闭写端
+        close(p[0]);    // 关闭读端
         close(fd[0]);
         wait(0);
-        // 阻塞父进程，直到有子进程结束
     }
 }
 

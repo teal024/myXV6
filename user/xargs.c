@@ -12,7 +12,6 @@ void clearArray(char *array, int size)
     memset(array, 0, sizeof(char) * size);
 }
 
-// xargs只要把前面的标准输入流(通过管道送给xargs)转化为新的指令的参数即可
 int main(int argc, char *argv[])
 {
     // printf("xargs here");
@@ -22,7 +21,6 @@ int main(int argc, char *argv[])
         exit(1);
     }
     char *input[MAXARG];
-    // Initialize input with allocated space for each element
     for (int i = 0; i < MAXARG; i++)
     {
         input[i] = (char *)malloc(sizeof(char) * MAX_ARG_LEN);
