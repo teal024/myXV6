@@ -546,10 +546,38 @@ printwalk(pagetable_t pagetable, int level)
   }
 }
 
-// Print pagetable.
-void
-vmprint(pagetable_t pagetable)
+// 根据层级打印pagetable项, 3级页表分别为0，1，2
+void vmprint_level(pagetable_t pagetable, int level)
+{
+  // there are 2^9 = 512 PTEs in a page table.
+  for (int i = 0; i < 512; i++)
+  {
+    pte_t pte = pagetable[i];
+    if ((pte & PTE_V))
+    {
+      uint64 addr = PTE2PA(pte);
+      for (int j = 0; j <= level; j++)
+      {
+        if (j)
+          printf(" ");
+        printf("..");
+      }
+      if ((pte & (PTE_R | PTE_W | PTE_X)) == 0)
+      { // 非叶子页面
+        printf("%d: pte %p pa %p\n", i, pte, addr);   //也要打印
+        vmprint_level((pagetable_t)addr, level + 1);
+      }
+      else
+      { // 有读、写权限的是叶子页
+        printf("%d: pte %p pa %p\n", i, pte, addr);
+      }
+    }
+  }
+}
+
+// print pagetable of a process
+void vmprint(pagetable_t pagetable)
 {
   printf("page table %p\n", pagetable);
-  printwalk(pagetable, 2);
+  vmprint_level(pagetable, 0);
 }
