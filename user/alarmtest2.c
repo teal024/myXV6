@@ -29,13 +29,7 @@ main(int argc, char *argv[])
 
 volatile static int count;
 
-void
-periodic()
-{
-  count = count + 1;
-  printf("alarm!\n");
-  sigreturn();
-}
+
 
 // tests whether the kernel calls
 // the alarm handler even a single time.
@@ -45,6 +39,7 @@ test0()
   int i;
   printf("test0 start\n");
   count = 0;
+  printf("addr: %p\n", periodic);
   sigalarm(2, periodic);
   for(i = 0; i < 1000*500000; i++){
     if((i % 1000000) == 0)
@@ -64,7 +59,9 @@ void __attribute__ ((noinline)) foo(int i, int *j) {
   if((i % 2500000) == 0) {
     write(2, ".", 1);
   }
+  //printf("i: %d, j: %d\n", i, *j);
   *j += 1;
+  // printf("i: %d, j: %d\n", i, *j);
 }
 
 //
@@ -80,6 +77,7 @@ test1()
 {
   int i;
   int j;
+  int a;
 
   printf("test1 start\n");
   count = 0;
@@ -88,8 +86,14 @@ test1()
   for(i = 0; i < 500000000; i++){
     if(count >= 10)
       break;
+    //printf("before i: %d, j: %d\n", i, j);
     foo(i, &j);
+    //printf("after i: %d, j: %d\n", i, j);
+    //printf("i: %d\n", i);
+    a = 3;
   }
+
+  printf("end, i: %d, j: %d, a: %d\n", i, j, a);
   if(count < 10){
     printf("\ntest1 failed: too few calls to the handler\n");
   } else if(i != j){
@@ -145,6 +149,7 @@ slow_handler()
 {
   count++;
   printf("alarm!\n");
+  printf("1------------------------------\n");
   if (count > 1) {
     printf("test2 failed: alarm handler called more than once\n");
     exit(1);
@@ -152,6 +157,17 @@ slow_handler()
   for (int i = 0; i < 1000*500000; i++) {
     asm volatile("nop"); // avoid compiler optimizing away loop
   }
+  printf("2------------------------------\n");
   sigalarm(0, 0);
   sigreturn();
+}
+
+void
+periodic()
+{
+  count = count + 1;
+  printf("alarm!\n");
+  //printf("cnt: %d\n", count);
+  sigreturn();
+  printf("over!!!!!\n");
 }
