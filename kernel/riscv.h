@@ -170,7 +170,7 @@ static inline uint64
 r_stvec()
 {
   uint64 x;
-  asm volatile("csrr %0, stvec" : "=r" (x) );
+  asm volatile("csrr %0, stvec" : "=r" (x) );   // 将参数写入stvec寄存器
   return x;
 }
 
@@ -216,7 +216,7 @@ w_mscratch(uint64 x)
 }
 
 // Supervisor Trap Cause
-static inline uint64
+static inline uint64    // csr read
 r_scause()
 {
   uint64 x;
