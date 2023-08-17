@@ -235,7 +235,7 @@ userinit(void)
   uvminit(p->pagetable, initcode, sizeof(initcode));
   p->sz = PGSIZE;
 
-  // xyf
+  // lab3
   // include user page table in kernel page table
   pvmcopy(p->pagetable, p->k_pagetable, 0, p->sz, p->sz);
 
@@ -264,12 +264,12 @@ growproc(int n)
     if((sz = uvmalloc(p->pagetable, sz, sz + n)) == 0) {
       return -1;
     }
-    // xyf
+    // lab3
     if(pvmcopy(p->pagetable, p->k_pagetable, p->sz, sz, sz) < 0)
       return -1;
   } else if(n < 0){
     sz = uvmdealloc(p->pagetable, sz, sz + n);
-    // xyf
+    // lab3
     if(pvmcopy(p->pagetable, p->k_pagetable, sz, sz, p->sz) < 0)
       return -1;
   }
@@ -299,7 +299,7 @@ fork(void)
   }
   np->sz = p->sz;
 
-  // xyf
+  // lab3
   // Copy user pagetable to kernel pagetable.
   if(pvmcopy(np->pagetable, np->k_pagetable, 0, np->sz, np->sz) < 0){
     freeproc(np);

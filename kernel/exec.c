@@ -116,7 +116,7 @@ exec(char *path, char **argv)
   p->trapframe->sp = sp; // initial stack pointer
   proc_freepagetable(oldpagetable, oldsz);
 
-  // xyf
+  // lab3
   if(pvmcopy(pagetable, p->k_pagetable, 0, sz, oldsz) < 0)
     goto bad;
 
